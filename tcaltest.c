@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
   }
 
   argstart = optind;
-  argcount = argc-optind;
+  argcount = argc-argstart;
 
   if(!dofile && argcount < 1) exit(usage());
 

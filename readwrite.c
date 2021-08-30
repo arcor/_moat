@@ -89,11 +89,9 @@ int main(int argc, char *argv[]) {
   int ipkt;
   long nummsgs;
   long msgs_written=0, msgs_ok=0;
-  int mode;
   unsigned long long totbytes = 0;
   double totmb;
   double kbps;
-  time_t t1, t2, delt;
   int dokb            = 0;
   int kbmin;
   int msgdelay        = 0;
@@ -107,7 +105,7 @@ int main(int argc, char *argv[]) {
   long read_try_sum   = 0;
   int check_data      = 1; /* Set to zero to kludge-supress the checking of RX pkt */
   int stuff = 0; /* If 1, stuff messages into driver/TX FIFO as fast as possible */
-  int icard, ipair, idom;
+  int icard, ipair;
   char cdom;
   int fixpkt=0, pktlen;
   int mdelay=0;
@@ -116,6 +114,7 @@ int main(int argc, char *argv[]) {
   int rdelay    = 0;
   int incformat = 0;
   int dosetecho = 0;
+  //time_t t1, t2, delt;
   struct pollfd  pfd;
   struct timeval tstart, tlatest;
   float deltasec;
@@ -167,7 +166,7 @@ int main(int argc, char *argv[]) {
 
   msgdelay = 0;
   opendelay = 0;
-  mode = HUB;
+  //mode = HUB;
 
   if(strncmp(argv[optind], "HUB", 3)) exit(usage()); /* Keep compatibility w/ scripts */
 
@@ -187,7 +186,7 @@ int main(int argc, char *argv[]) {
   }
 
   sscanf(filename,"/dev/dhc%dw%dd%c", &icard, &ipair, &cdom);
-  idom = (cdom == 'A' ? 0 : 1);
+  //int idom = (cdom == 'A' ? 0 : 1);
 
   char comstat[BSIZ];
   snprintf(comstat, BSIZ, "/proc/driver/domhub/card%d/pair%d/dom%c/comstat", icard, ipair, cdom);
@@ -250,8 +249,9 @@ int main(int argc, char *argv[]) {
 
 	  msgs_written++;
 	  last_written = nbyteswritten;
-	  verbose && fprintf(stderr,"%s: pkt %ld idx %d; wrote %d bytes.\n", 
-			     filename, itxpkt, (int) itxpkt%NMSGBUF, pktlengths[itxpkt%NMSGBUF]);
+	  if (verbose)
+	    fprintf(stderr,"%s: pkt %ld idx %d; wrote %d bytes.\n", 
+		    filename, itxpkt, (int) itxpkt%NMSGBUF, pktlengths[itxpkt%NMSGBUF]);
 	  itxpkt++;
 	}
       }
@@ -337,8 +337,9 @@ int main(int argc, char *argv[]) {
 	  }
 
 	  /* Display statistics */
-	  verbose && fprintf(stderr, "%s: Read msg %ld (idx %d); %d bytes.\n", filename, msgs_ok, 
-			     (int) irxpkt%NMSGBUF, nread);
+	  if (verbose)
+	    fprintf(stderr, "%s: Read msg %ld (idx %d); %d bytes.\n", filename, msgs_ok, 
+		    (int) irxpkt%NMSGBUF, nread);
 	  totbytes += nread*2;
 	  last_read = nread;
 	  //printf("totbytes %llu\n", totbytes);
@@ -419,7 +420,7 @@ int main(int argc, char *argv[]) {
       } else {
 	if(firstmsg) {
 	  firstmsg = 0;
-	  t1 = time(NULL);
+	  //t1 = time(NULL);
 	  gettimeofday(&tstart, NULL);
 	}
 	last_written = nbyteswritten;
@@ -506,10 +507,10 @@ int main(int argc, char *argv[]) {
 
     totbytes += nbyteswritten + nread;
     totmb = ((float) totbytes)/(1024.*1024.);
-    t2 = time(NULL);
+    //t2 = time(NULL);
     gettimeofday(&tlatest, NULL);
-    delt = (int) t2 - (int) t1;
     deltasec = (tlatest.tv_sec - tstart.tv_sec) + 1.E-6*(tlatest.tv_usec - tstart.tv_usec);
+    //delt = (int) t2 - (int) t1;
     //fprintf(stderr,"delt %ld deltasec %2.6lf.\n", delt, deltasec);
     kbps = (((float) totbytes)/1000.) / deltasec;
     if (dokb && (deltasec > MIN_DT_BEFORE_KBCHECK) && (kbps < (double) kbmin)) {
